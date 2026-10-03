@@ -1,0 +1,47 @@
+name: Debian XFCE Webtop
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-webtop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Docker Compose
+        run: |
+          docker compose version
+
+      - name: Create docker-compose.yml
+        run: |
+          cat > docker-compose.yml <<'EOF'
+          services:
+            debian-desktop:
+              image: lscr.io/linuxserver/webtop:debian-xfce
+              container_name: debian_gui
+              ports:
+                - "6080:3000"
+              environment:
+                - PUID=1000
+                - PGID=1000
+                - TZ=Asia/Jakarta
+              shm_size: 1gb
+              stdin_open: true
+              tty: true
+              restart: unless-stopped
+          EOF
+
+      - name: Start Debian Webtop
+        run: |
+          docker compose up -d
+
+      - name: Check container
+        run: |
+          docker ps
+          docker logs --tail 50 debian_gui
